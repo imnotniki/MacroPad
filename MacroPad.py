@@ -3,6 +3,9 @@ import threading
 import time
 
 class MacroPad:
+
+    DEBUG_MODE = True
+
     def __init__(self, port, baud_rate=115200):
         self.port = port
         self.baud_rate = baud_rate
@@ -37,12 +40,16 @@ class MacroPad:
     def _listen(self):
         try:
             with serial.Serial(self.port, self.baud_rate, timeout=1) as ser:
+                ser.reset_input_buffer()
+                time.sleep(2)
                 while self.running:
                     if ser.in_waiting > 0:
                         line = ser.readline().decode('utf-8').strip()
                         for message, callback_function in self.callbacks:
                             if line == message:
                                 callback_function(line)
+                        if self.DEBUG_MODE:
+                            print(f"DEBUG RECEIVED MESSAGE: {line}")
                     time.sleep(0.1)
         except serial.SerialException as e:
             print(f"Serial error: {e}")
